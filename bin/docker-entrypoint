@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 set -e
 
+if [[ -n "${DATABASE_HOST:-}" ]]; then
+  echo "Waiting for database host ${DATABASE_HOST}..."
+  until getent hosts "${DATABASE_HOST}" >/dev/null 2>&1; do
+    sleep 1
+  done
+
+  if [[ -n "${POSTGRES_USER:-}" ]]; then
+    echo "Waiting for PostgreSQL to accept connections..."
+    until pg_isready -h "${DATABASE_HOST}" -U "${POSTGRES_USER}" >/dev/null 2>&1; do
+      sleep 1
+    done
+  fi
+fi
+
 # Configure git hooks for AI conversation capture
 git config core.hooksPath .git-hooks 2>/dev/null || true
 

@@ -1,12 +1,13 @@
 class Event < ApplicationRecord
   belongs_to :user
   has_many :ticket_tiers, dependent: :destroy
-  has_many :orders
+  has_many :orders, dependent: :destroy
+  has_many :bookmarks, dependent: :destroy
 
   validates :title, presence: true
 
   scope :published, -> { where(status: "published") }
-  scope :upcoming, -> { where("starts_at > ?", Time.current) }
+  scope :upcoming, -> { where("starts_at > ?", Time.current).order(:starts_at) }
 
   after_update :notify_attendees_if_cancelled
   after_update :update_search_index
@@ -42,6 +43,8 @@ class Event < ApplicationRecord
   end
 
   def update_search_index
+    return if Rails.env.test?
+
     SearchIndexJob.perform_later(self.id) if saved_changes.any?
   end
 

@@ -70,6 +70,8 @@ class Order < ApplicationRecord
   end
 
   def sync_with_crm
+    return if Rails.env.test?
+
     CrmSyncJob.perform_later(self.id) if saved_changes.any?
   end
 end

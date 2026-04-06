@@ -31,6 +31,16 @@ RSpec.describe Api::V1::OrdersController, type: :request do
 
       expect(response).to have_http_status(:ok)
     end
+
+    it "does not allow access to another user's order" do
+      other_user = create(:user)
+      order = create(:order, user: other_user, event: event)
+
+      get "/api/v1/orders/#{order.id}", headers: auth_headers(attendee)
+
+      expect(response).to have_http_status(:not_found)
+      expect(JSON.parse(response.body)).to eq("error" => "Not found")
+    end
   end
 
   describe "POST /api/v1/orders/:id/cancel" do
@@ -41,6 +51,16 @@ RSpec.describe Api::V1::OrdersController, type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(order.reload.status).to eq("cancelled")
+    end
+
+    it "does not allow cancelling another user's order" do
+      other_user = create(:user)
+      order = create(:order, user: other_user, event: event, status: "pending")
+
+      post "/api/v1/orders/#{order.id}/cancel", headers: auth_headers(attendee)
+
+      expect(response).to have_http_status(:not_found)
+      expect(order.reload.status).to eq("pending")
     end
   end
 end

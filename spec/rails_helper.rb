@@ -1,5 +1,6 @@
 require "spec_helper"
-ENV["RAILS_ENV"] ||= "test"
+ENV["RAILS_ENV"] = "test"
+ENV.delete("DATABASE_URL")
 
 require_relative "../config/environment"
 abort("The Rails environment is running in production mode!") if Rails.env.production?
